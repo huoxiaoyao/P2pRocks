@@ -1,7 +1,9 @@
 package ch.ethz.inf.vs.a4.simplep2p;
 
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.CompoundButton;
 import android.widget.ToggleButton;
 
@@ -30,5 +32,10 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    public void test(View view) {
+        Intent i = new Intent(this, ArrowActivity.class);
+        startActivity(i);
     }
 }
