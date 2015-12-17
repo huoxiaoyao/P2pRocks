@@ -51,7 +51,7 @@ class SocketListenerThread extends Thread {
                 try
                 {
                     SendTask sendTask = taskQueue.take();
-                    sendAll( sendTask.message.getBytes() );
+                    sendAll( null ); // depreciated
                 }
                 catch (InterruptedException e)
                 {

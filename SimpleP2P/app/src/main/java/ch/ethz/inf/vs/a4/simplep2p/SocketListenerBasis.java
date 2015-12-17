@@ -46,6 +46,12 @@ public abstract class SocketListenerBasis extends Thread {
 
     protected abstract byte[] reactToMessage( String prefix, PINInfoBundle body );
 
+    
+
+    public static byte[] toBytes( String prefix, JSONObject body ){
+        return ( prefix + body.toString().length() + ConfigP2p.JSON_LENGTH_DELIMITER + body.toString() ).getBytes();
+    }
+
     protected void sendAll( byte[] message ){
 
         byte[] sendMessage = Arrays.copyOf( message, ConfigP2p.MESSAGE_SIZE_LONG );
@@ -80,6 +86,8 @@ public abstract class SocketListenerBasis extends Thread {
         }
     }
 
+
+
     public final void run() {
 
         preparation();
@@ -92,7 +100,7 @@ public abstract class SocketListenerBasis extends Thread {
                 try
                 {
                     SendTask sendTask = taskQueue.take();
-                    sendAll( sendTask.message.getBytes() );
+                    sendAll( toBytes( sendTask.prefix, sendTask.body ) );
                 }
                 catch (InterruptedException e)
                 {
@@ -108,9 +116,9 @@ public abstract class SocketListenerBasis extends Thread {
                         socket.getInputStream().read( buffer );
                         String message = new String( buffer, 0, ConfigP2p.MESSAGE_SIZE_SHORT );
                         String prefix = message.substring( 0, ConfigP2p.PREFIX_LENGTH );
-                        String rest = message.substring( ConfigP2p.PREFIX_LENGTH, message.length() );
+                        String rest = message.substring(ConfigP2p.PREFIX_LENGTH, message.length());
                         Log.d( "## SocketBasis ##", "received whole: " + rest );
-                        String[] args = rest.split("£");
+                        String[] args = rest.split( ConfigP2p.JSON_LENGTH_DELIMITER );
                         int length = Integer.parseInt(args[0]);
                         String json = args[1].substring(0, length);
                         Log.d( "## SocketBasis ##", "received " + json );

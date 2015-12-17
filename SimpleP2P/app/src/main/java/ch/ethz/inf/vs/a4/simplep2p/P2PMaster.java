@@ -172,7 +172,7 @@ public class P2PMaster implements WifiP2pManager.ConnectionInfoListener, PeerDis
                 mDestLocation.setLatitude(47.37794d);
                 mDestLocation.setLongitude(8.54020d);
                 PINInfoBundle body = new PINInfoBundle( userID, mDestLocation, "ich sterbe" );
-                taskQueue.offer(new SendTask( ConfigP2p.ALARM_INIT + body.toJSON().toString().length() + "£" + body.toJSON().toString() ));
+                taskQueue.offer(new SendTask( ConfigP2p.ALARM_INIT,  body.toJSON() ));
             }
 
         }

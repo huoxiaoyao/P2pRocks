@@ -60,7 +60,7 @@ public class ClientSocketListener extends SocketListenerBasis {
     }
 
     @Override
-    protected byte[] reactToMessage(String prefix, PINInfoBundle body ) {
+    protected byte[] reactToMessage( String prefix, PINInfoBundle body ) {
 
         if ( prefix.equals( ConfigP2p.ALARM_INIT ) )
         {

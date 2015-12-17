@@ -58,9 +58,9 @@ public class GroupOwnerSocketHandler extends Thread {
                 {
                     alarmInvokerList.add(socket.getInetAddress());
 
-                    updateLocation( body.loc );
+                    updateLocation(body.loc);
 
-                    return ( ConfigP2p.ALARM_INIT + body.toJSON().toString().length() + "£" + body.toJSON().toString() ).getBytes();
+                    return toBytes( ConfigP2p.ALARM_INIT, body.toJSON() );
                 }
 
                 return null;
