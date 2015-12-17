@@ -42,11 +42,27 @@ public abstract class SocketListenerBasis extends Thread {
         alarmInvoker = new java.util.ArrayList<>( );
     }
 
+    /**
+     * Method is called before while(true) loop.
+     * Should contain all the necessary preparation
+     */
+
     protected abstract void preparation();
+
+    /**
+     * Specifies action on a received message = ( prefix, body )
+     * return message that should be send on all available sockets.
+     * return null if no message should be send
+     * @param prefix
+     * @param body
+     * @return
+     */
 
     protected abstract byte[] reactToMessage( String prefix, PINInfoBundle body );
 
-    
+    public void stopLooping(){
+        stopVar = false;
+    }
 
     public static byte[] toBytes( String prefix, JSONObject body ){
         return ( prefix + body.toString().length() + ConfigP2p.JSON_LENGTH_DELIMITER + body.toString() ).getBytes();
