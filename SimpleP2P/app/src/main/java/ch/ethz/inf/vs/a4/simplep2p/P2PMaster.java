@@ -3,6 +3,7 @@ package ch.ethz.inf.vs.a4.simplep2p;
 import android.app.Activity;
 import android.content.Context;
 import android.content.IntentFilter;
+import android.location.Location;
 import android.net.wifi.WpsInfo;
 import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
@@ -11,15 +12,19 @@ import android.net.wifi.p2p.WifiP2pManager;
 import android.net.wifi.p2p.nsd.WifiP2pDnsSdServiceInfo;
 import android.util.Log;
 
+import java.io.IOException;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * Created by Fabian_admin on 16.12.2015.
  */
-public class P2PMaster implements WifiP2pManager.ConnectionInfoListener, PeerDiscoverListener {
+public class P2PMaster implements WifiP2pManager.ConnectionInfoListener, PeerDiscoverListener, LocationUpdateListener {
+
     public static final String TAG = "## P2PMaster ##";
 
     protected final WifiP2pManager manager;
@@ -34,11 +39,15 @@ public class P2PMaster implements WifiP2pManager.ConnectionInfoListener, PeerDis
     private static final int SERVER_PORT = 4545;
     private static final int PORT = 5000;
 
+    public static String userID = Long.toString( System.nanoTime() );
+    private String userMessage = "I die, help!";
+
     protected final PeerDiscovery peerDiscovery;
 
     private final WifiP2pDnsSdServiceInfo service;
 
-    private final List<Socket> socketList;
+    public final LinkedBlockingQueue<Socket> socketList;
+    public final ArrayBlockingQueue<SendTask> taskQueue;
 
     private boolean alarmActive = false;
 
@@ -73,7 +82,8 @@ public class P2PMaster implements WifiP2pManager.ConnectionInfoListener, PeerDis
 
         service = WifiP2pDnsSdServiceInfo.newInstance( SERVICE_INSTANCE, SERVICE_REG_TYPE, record );
 
-        socketList = new java.util.ArrayList<>();
+        socketList = new LinkedBlockingQueue<Socket>( ConfigP2p.SOCKET_QUEUE_SIZE );
+        taskQueue = new ArrayBlockingQueue<SendTask>( ConfigP2p.SEND_TASK_QUEUE_SIZE );
 
     }
 
@@ -99,7 +109,7 @@ public class P2PMaster implements WifiP2pManager.ConnectionInfoListener, PeerDis
                 manager.addLocalService(channel, service, new WifiP2pManager.ActionListener() {
                     @Override
                     public void onSuccess() {
-                        Log.d( TAG, "add service success");
+                        Log.d(TAG, "add service success");
                     }
 
                     @Override
@@ -133,7 +143,11 @@ public class P2PMaster implements WifiP2pManager.ConnectionInfoListener, PeerDis
     }
 
     public void addSocket( Socket socket ){
-        socketList.add( socket );
+        socketList.offer(socket);
+    }
+
+    public void onLocationUpdate( Location location ){
+        Log.d( TAG, "location arrived: " + location.toString() );
     }
 
     @Override
@@ -142,13 +156,27 @@ public class P2PMaster implements WifiP2pManager.ConnectionInfoListener, PeerDis
 
         // TODO: sometimes this method is called even though no connection exists, which leads to errors in the current version
 
-        if(info.groupFormed) {
-            if (info.isGroupOwner) {
-                new GroupOwnerSocketHandler(this, SERVER_PORT).start();
-            } else {
-                new ClientSocketHandler(this, info.groupOwnerAddress, SERVER_PORT, PORT).start();
+        if( info.groupFormed )
+        {
+            if ( info.isGroupOwner )
+            {
+                new GroupOwnerSocketHandler( this, SERVER_PORT ).start();
             }
+            else
+            {
+                new ClientSocketListener( this, info.groupOwnerAddress, SERVER_PORT, PORT ).start();
+            }
+            if ( alarmActive )
+            {
+                Location mDestLocation = new Location("");
+                mDestLocation.setLatitude(47.37794d);
+                mDestLocation.setLongitude(8.54020d);
+                PINInfoBundle body = new PINInfoBundle( userID, mDestLocation, "ich sterbe" );
+                taskQueue.offer(new SendTask( ConfigP2p.ALARM_INIT,  body.toJSON() ));
+            }
+
         }
+
     }
 
     @Override
