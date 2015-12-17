@@ -142,13 +142,12 @@ public class P2PMaster implements WifiP2pManager.ConnectionInfoListener, PeerDis
 
         // TODO: sometimes this method is called even though no connection exists, which leads to errors in the current version
 
-        if ( info.isGroupOwner )
-        {
-            new GroupOwnerSocketHandler( this, SERVER_PORT ).start();
-        }
-        else
-        {
-            new ClientSocketHandler( this, info.groupOwnerAddress, SERVER_PORT, PORT ).start();
+        if(info.groupFormed) {
+            if (info.isGroupOwner) {
+                new GroupOwnerSocketHandler(this, SERVER_PORT).start();
+            } else {
+                new ClientSocketHandler(this, info.groupOwnerAddress, SERVER_PORT, PORT).start();
+            }
         }
     }
 

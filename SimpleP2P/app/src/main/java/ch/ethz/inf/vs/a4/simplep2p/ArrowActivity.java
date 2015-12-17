@@ -127,14 +127,15 @@ public class ArrowActivity extends AppCompatActivity implements
             float myBearing = mCurrentLocation.bearingTo(mDestLocation);
 
             float rotation = normaliseDegree(normaliseDegree(myHeading) - normaliseDegree(myBearing));
-            setArrowRotation(rotation);
+            Log.e("BEARING", String.valueOf(normaliseDegree(myBearing)));
+            setArrowRotation(-rotation);
         }
     }
 
     private float normaliseDegree(float degrees) {
         if(degrees >= 0){
             return degrees % 360;
-        }else{
+        } else{
             return 360 + (degrees % 360);
         }
     }
